@@ -42,14 +42,51 @@ python scripts/create_sections.py \
 ```
 Any section name not already present as an H1 heading will be appended at the end of the document.
 
-### Page Breaks
+### Section Breaks
 
-To insert a page break before each H1 section (so each section starts on its own page), run:
+To insert a true section break (new page and new section) before each H1 heading, run:
 ```bash
-python scripts/insert_page_breaks.py --doc-id YOUR_DOC_ID
+python scripts/insert_section_breaks.py --doc-id YOUR_DOC_ID
 ```
-This will locate every existing H1 heading in the Doc and insert a page break immediately before it.
+This will insert a `NEXT_PAGE` section break at each H1, allowing you to assign distinct headers/footers per section.
 Ensure the service account has Editor access.
+
+## Headers & Footers
+
+To add a custom header for each section and set up a footer placeholder, run:
+```bash
+python scripts/apply_section_headers.py \
+  --doc-id YOUR_DOC_ID \
+  --prefix "Advisor Notes - "
+```
+- This creates a distinct header for each H1 section, prefixed with your text.  
+- It also creates one footer and assigns it to all sections.
+
+## Section Tagging
+
+To uniquely identify each section (for downstream DB mapping), create a named range on every specified H1 heading:
+```bash
+python scripts/tag_sections.py \
+  --doc-id YOUR_DOC_ID \
+  --sections \
+    "EMAN ALANKARI" \
+    "GELBAN ALGELBAN" \
+    "MISHAAL ALMAIMANI" \
+    ...
+```
+Any heading not found will be skipped with a warning.  
+This writes `sections/sections.json` mapping each slug to its heading name and indices.
+This will:
+- Generate a slug ID (e.g. `lionel-lyle-belen`) for each heading.  
+- Create a named range in the Doc covering the heading text.  
+- Dump a local file `sections/sections.json` mapping each slug to its heading name and indices.
+
+### Page Numbers
+
+Google Docs API does not yet support dynamic page-number insertion via the HTTP API.  
+After running the headers script, open the Doc in the UI and use:
+Insert → Page numbers → choose a bottom-of-page style
+to place page numbers in the footer you just created.
 Note: this script writes to the document, so the service account must have Editor access.
 
 ## Bootstrap (optional)
