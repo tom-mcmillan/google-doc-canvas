@@ -1,0 +1,58 @@
+name: Sync Google Doc and Activity
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # daily at midnight UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Write GCP credentials
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        run: echo "$GCP_CREDENTIALS" > credentials.json
+
+      - name: Export credentials path
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/credentials.json" >> $GITHUB_ENV
+
+      - name: Sync Doc to Markdown
+        run: |
+          python scripts/sync_doc.py \
+            --doc-id "${{ secrets.GOOGLE_DOC_ID }}" \
+            --output docs/project_notes.md \
+            --commit
+
+      - name: Fetch Drive Activity
+        run: |
+          python scripts/fetch_activity.py \
+            --doc-id "${{ secrets.GOOGLE_DOC_ID }}" \
+            --output activity/activity.json
+
+      - name: Commit & push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/project_notes.md activity/activity.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Automated sync of Google Doc and activity"
+            git push
+          else
+            echo "No changes to commit."
+          fi
