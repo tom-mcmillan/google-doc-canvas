@@ -1,7 +1,24 @@
 {
   "timeZone": "America/New_York",
-  "dependencies": {
-  },
+  "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8"
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/documents.currentonly",
+    "https://www.googleapis.com/auth/script.container.ui",
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/script.scriptapp"
+  ],
+  "addOns": {
+    "common": {
+      "name": "Docs Terminal",
+      "logoUrl": "https://ssl.gstatic.com/docs/script/images/logo_2020q4_48.png"
+    },
+    "docs": {
+      "homepageTrigger": {
+        "runFunction": "showSidebar"
+      }
+    }
+  }
 }

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.js"></script>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+      #terminal { width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <script>
+      // Initialize the terminal
+      const term = new Terminal({ cursorBlink: true });
+      term.open(document.getElementById('terminal'));
+      term.write('Docs-Terminal ready\r\n$ ');
+      let cmd = '';
+      
+      // Handle user input
+      term.onData(e => {
+        if (e === '\r') {
+          // Enter: send command
+          const input = cmd;
+          cmd = '';
+          term.write('\r\n');
+          // Call server
+          google.script.run
+            .withSuccessHandler(output => {
+              output.split(/\r?\n/).forEach(line => term.write(line + '\r\n'));
+              term.write('$ ');
+            })
+            .runCommand(input);
+        } else if (e === '\u007F') {
+          // Backspace
+          if (cmd.length > 0) {
+            cmd = cmd.slice(0, -1);
+            term.write('\b \b');
+          }
+        } else {
+          // Regular character
+          cmd += e;
+          term.write(e);
+        }
+      });
+    </script>
+  </body>
+</html>
